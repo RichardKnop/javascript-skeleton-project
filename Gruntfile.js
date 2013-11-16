@@ -1,37 +1,35 @@
-"use strict";
-
 module.exports = function (grunt) {
+
+    "use strict";
+
+    var productionJSFile, productionCSSFile, productionHTMLFile, generatedPaths, dependencyInstallPaths;
+
+    productionJSFile = "production.js";
+    productionCSSFile = "production.css";
+    productionHTMLFile = "production.html";
+
+    generatedPaths = [
+        "_site"
+    ];
+    dependencyInstallPaths = [
+        "bower_components",
+        "node_modules"
+    ];
 
     grunt.initConfig({
         pkg: grunt.file.readJSON("package.json"), // We can reference stuff from config this way src: 'src/<%= pkg.name %>.js'
+        clean: {
+            generated: generatedPaths,
+            dependencies : dependencyInstallPaths,
+            productionJSFile: productionJSFile,
+            productionCSSFile: productionCSSFile
+        },
         exec: {
             bower: {
                 command: "./node_modules/bower/bin/bower install"
             },
             lint: {
                 command: "node lint.js"
-            }
-        },
-        connect: {
-            server: {
-                options: {
-                    port: 9001,
-                    base: '.',
-                    keepalive: true
-                }
-            }
-        },
-        qunit: {
-            unit: 'test.html',
-            functional: 'functionalTest.html'
-        },
-        compass: {
-            dist: {
-                options: {
-                    sassDir: "./css/sass",
-                    cssDir: "./css/stylesheets",
-                    environment: "production"
-                }
             }
         },
         requirejs: {
@@ -55,33 +53,68 @@ module.exports = function (grunt) {
                 }
             }
         },
-        inline: {
-            dist: {
-                src: ["production.html"],
-                dest: ["_site/index.html"]
+        cssmin: {
+            combine: {
+                files: {
+                    "production.css": [
+                        "css/stylesheets/*.css"
+                    ]
+                }
+            },
+            minify: {
+                expand: true,
+                cwd: ".",
+                src: [productionCSSFile],
+                dest: "_site",
+                ext: ".css"
             }
         },
         copy: {
             images: {
                 src: "images/*",
                 dest: "_site/"
+            },
+            productionHTMLFile: {
+                src: productionHTMLFile,
+                dest: "_site/index.html"
+            },
+            productionJSFile: {
+                src: productionJSFile,
+                dest: "_site/" + productionJSFile
             }
         },
-        clean: {
-            generated: [
-                "production.js"
-            ]
+        connect: {
+            server: {
+                options: {
+                    port: 9001,
+                    base: '.',
+                    keepalive: true
+                }
+            }
+        },
+        compass: {
+            dist: {
+                options: {
+                    sassDir: "./css/sass",
+                    cssDir: "./css/stylesheets",
+                    environment: "production"
+                }
+            }
+        },
+        qunit: {
+            unit: 'test.html',
+            functional: 'functionalTest.html'
         }
     });
 
     grunt.loadNpmTasks("grunt-exec");
-    grunt.loadNpmTasks("grunt-contrib-connect");
-    grunt.loadNpmTasks("grunt-contrib-qunit");
-    grunt.loadNpmTasks("grunt-contrib-compass");
     grunt.loadNpmTasks("grunt-contrib-requirejs");
-    grunt.loadNpmTasks("grunt-inline");
+    grunt.loadNpmTasks("grunt-contrib-cssmin");
     grunt.loadNpmTasks("grunt-contrib-copy");
     grunt.loadNpmTasks("grunt-contrib-clean");
+    grunt.loadNpmTasks("grunt-contrib-connect");
+    grunt.loadNpmTasks("grunt-contrib-compass");
+    grunt.loadNpmTasks("grunt-contrib-qunit");
 
     grunt.registerTask("install", ["exec:bower"]);
 
@@ -98,9 +131,14 @@ module.exports = function (grunt) {
     });
 
     grunt.registerTask("build", [
-        "install", "test",
-        "createSiteDir", "requirejs", "inline", "copy:images",
-        "clean:generated"
+        "install", "test", "createSiteDir", "requirejs",
+        "copy:images", "copy:productionJSFile", "cssmin", "copy:productionHTMLFile",
+        "clean:productionJSFile", "clean:productionCSSFile"
+    ]);
+
+    grunt.registerTask("reset", [
+        "clean:generated",
+        "clean:dependencies"
     ]);
 
 };
