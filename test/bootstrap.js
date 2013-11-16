@@ -7,10 +7,5 @@ var require = {
     urlArgs: (new Date).getTime(), // Bypass caches (useful when loading the page from the file system)
     paths: {
         jquery: "bower_components/jquery/jquery"
-    },
-    "shim": {
-        "jquery": {
-            exports: "$"
-        }
     }
 };

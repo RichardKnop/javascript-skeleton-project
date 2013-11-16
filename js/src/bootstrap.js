@@ -5,11 +5,6 @@ requirejs.config({
     paths: {
         bower   : "./../../bower_components",
         jquery  : "./../../bower_components/jquery/jquery.min"
-    },
-    "shim": {
-        "jquery": {
-            exports: "$"
-        }
     }
 });
 
